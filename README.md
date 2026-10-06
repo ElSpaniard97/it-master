@@ -16,13 +16,15 @@ Open http://localhost:5173. Select a connection type, click a source port, then 
 
 Connect ISP fiber → modem/ONT → router WAN; router LAN → PoE switch; switch → desktop, access point, VoIP phone, IP camera, and printer. Connect the laptop to the AP using Wi-Fi. Supply the modem, router, switch, desktop, and printer from the UPS. Complete all 14 links to win.
 
-This is a simplified simulation: the ISP handoff and UPS start operational; the switch provides PoE; the laptop has battery power. DHCP, VLANs, switch port allocation, power budgets, and wireless authentication are not simulated. Shared ETH and PWR buttons represent multiple available ports/outlets. HDMI is an intentional distractor.
+This is a simplified simulation: the ISP handoff and UPS start operational; the switch provides PoE; the laptop has battery power. DHCP, VLANs, switch port allocation, power budgets, and wireless authentication are not simulated. Shared ETH and PWR buttons represent multiple available ports/outlets. HDMI, console USB, and analog RJ11 are learning distractors in this level. The Tools item gives a diagnostic hint. The patch panel is visible rack infrastructure; port allocation comes in a later level.
 
 ## Structure
 
 - `src/engine.js`: devices, connection rules, and online reachability
 - `src/app.js`: game interactions, saved progress, and SVG cables
-- `style.css`: responsive lab interface
+- `style.css`: office scene, floating HUD, and cable tray
+- `public/office.png`: generated office artwork
+- `docs/artwork.md`: artwork generation prompt and provenance
 - `tests/engine.test.js`: connection and power dependency tests
 
 ## Next levels
@@ -37,3 +39,5 @@ This is a simplified simulation: the ISP handoff and UPS start operational; the 
 Repository: https://github.com/ElSpaniard97/it-master
 
 GitHub Actions runs the network logic tests on pushes and pull requests.
+
+The office uses a fixed scene coordinate system. Narrow screens can scroll horizontally to reach all equipment. Use **Ports: on** to switch to hover/focus port labels for a cleaner view.
