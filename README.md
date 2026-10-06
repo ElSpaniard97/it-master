@@ -10,22 +10,32 @@ Requires Node.js 22 or later.
 npm start
 ```
 
-Open http://localhost:5173. Select a connection type, click a source port, then a destination port. Device names open the inspector. Use hints to learn the topology, undo mistakes, or restart. Progress persists in local storage. Run `npm test` for network logic tests.
+Open http://localhost:5173. Pick a mission from **Missions ☰**, select a cable, then click a source port and a destination port. Device names open the inspector. Use hints, undo mistakes, or restart a mission. Progress and best scores persist in local storage. Run `npm test` for the network and mission logic tests.
 
-## Level 01
+## Missions
 
-Connect ISP fiber → modem/ONT → router WAN; router LAN → PoE switch; switch → desktop, access point, VoIP phone, IP camera, and printer. Connect the laptop to the AP using Wi-Fi. Supply the modem, router, switch, desktop, and printer from the UPS. Complete all 14 links to win.
+There are 30 missions in four tracks, all in the same office:
 
-This is a simplified simulation: the ISP handoff and UPS start operational; the switch provides PoE; the laptop has battery power. DHCP, VLANs, switch port allocation, power budgets, and wireless authentication are not simulated. Shared ETH and PWR buttons represent multiple available ports/outlets. HDMI, console USB, and analog RJ11 are learning distractors in this level. The Tools item gives a diagnostic hint. The patch panel is visible rack infrastructure; port allocation comes in a later level.
+- **Installs (1–10):** bring up one piece at a time, from the fiber handoff to PoE phones, cameras, and Wi-Fi.
+- **Builds (11–15):** larger jobs such as building the comms closet, putting everything on the UPS, or wiring the whole office from scratch.
+- **Outages (16–21):** the office is mostly wired, but something was unplugged. Read the online/offline status to find it.
+- **Troubleshooting (22–30):** wrong cables are already in place (modem on the router LAN, a PoE camera on the router, an RJ11 cord in an Ethernet port). Select **Unplug** and click both ends of a bad cable, then wire it correctly.
+
+A ★ in the mission list means the mission was finished with no mistakes or hints.
+
+This is a simplified simulation: the ISP handoff and UPS start operational; the switch provides PoE; the laptop has battery power. DHCP, VLANs, switch port allocation, power budgets, and wireless authentication are not simulated. Shared ETH and PWR buttons on the switch and UPS represent multiple available ports/outlets. HDMI, console USB, and analog RJ11 are learning distractors. The Tools item gives a diagnostic hint. The patch panel is visible rack infrastructure; port allocation comes in a later level.
 
 ## Structure
 
 - `src/engine.js`: devices, connection rules, and online reachability
+- `src/missions.js`: the 30 missions (prewired links, links to add, faulty cables)
+- `src/game.js`: mission state: connect, unplug, undo, hints, completion
 - `src/app.js`: game interactions, saved progress, and SVG cables
 - `style.css`: office scene, floating HUD, and cable tray
 - `public/office.png`: generated office artwork
 - `docs/artwork.md`: artwork generation prompt and provenance
 - `tests/engine.test.js`: connection and power dependency tests
+- `tests/missions.test.js`: mission data checks and a hint-driven solve of every mission
 
 ## Next levels
 
