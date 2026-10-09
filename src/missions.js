@@ -1,20 +1,26 @@
-// Missions reuse the office's required links (see engine.js) by index:
-// 0 ISP→modem fiber · 1 modem→router WAN · 2 router LAN→switch · 3 switch→AP · 4 switch→PC
-// 5 switch→phone · 6 switch→camera · 7 switch→printer · 8 AP→laptop Wi-Fi
-// 9 UPS→modem · 10 UPS→router · 11 UPS→switch · 12 UPS→PC · 13 UPS→printer
+import { required, linkIndex } from './engine.js';
+// Missions name the office's required links by id (see engine.js), e.g. 'switch-pc' or 'ups-router'.
 // `start` links are already plugged in, `add` links are the player's job, and `faults` are
 // wrong cables already in the scene that must be unplugged.
-const ALL = [...Array(14).keys()];
-const CLOSET = [0, 1, 2, 9, 10, 11];
-const except = (...skip) => ALL.filter(i => !skip.includes(i));
+const ALL = required.map(r => r.id);
+const CLOSET = [
+  'isp-modem',
+  'modem-router',
+  'router-switch',
+  'ups-modem',
+  'ups-router',
+  'ups-switch',
+];
+const except = (...skip) => ALL.filter(id => !skip.includes(id));
 const fault = (a, ap, b, bp, cable, why) => ({ a, ap, b, bp, cable, why });
+// Link ids are resolved to indices into `required`, which is what game state stores.
 const mission = (id, track, title, brief, start, add, faults = []) => ({
   id,
   track,
   title,
   brief,
-  start,
-  add,
+  start: start.map(linkIndex),
+  add: add.map(linkIndex),
   faults,
 });
 export const tracks = ['Installs', 'Builds', 'Outages', 'Troubleshooting'];
@@ -25,23 +31,23 @@ export const missions = [
     'Light up the fiber',
     'The ISP just installed fiber. Connect the modem/ONT to the optical handoff and give it backup power.',
     [],
-    [0, 9],
+    ['isp-modem', 'ups-modem'],
   ),
   mission(
     'edge',
     'Installs',
     'Router on the edge',
     'The modem has signal. Put the router behind it and power it from the UPS.',
-    [0, 9],
-    [1, 10],
+    ['isp-modem', 'ups-modem'],
+    ['modem-router', 'ups-router'],
   ),
   mission(
     'core',
     'Installs',
     'Core switch install',
     'Rack the PoE switch: feed it from the router LAN and give it UPS power.',
-    [0, 1, 9, 10],
-    [2, 11],
+    ['isp-modem', 'modem-router', 'ups-modem', 'ups-router'],
+    ['router-switch', 'ups-switch'],
   ),
   mission(
     'workstation',
@@ -49,7 +55,7 @@ export const missions = [
     'First workstation',
     'A new hire starts today. Get their desktop PC on the wired network with backup power.',
     CLOSET,
-    [4, 12],
+    ['switch-pc', 'ups-pc'],
   ),
   mission(
     'printer',
@@ -57,7 +63,7 @@ export const missions = [
     'Network printer setup',
     'Finance needs to print invoices. Wire the network printer and power it.',
     CLOSET,
-    [7, 13],
+    ['switch-printer', 'ups-printer'],
   ),
   mission(
     'voip',
@@ -65,7 +71,7 @@ export const missions = [
     'VoIP phone rollout',
     'Replace the old analog line: connect the VoIP phone. PoE powers it, so no power cable is needed.',
     CLOSET,
-    [5],
+    ['switch-phone'],
   ),
   mission(
     'camera',
@@ -73,7 +79,7 @@ export const missions = [
     'Security camera install',
     'Facilities wants the entrance covered. Connect the PoE IP camera.',
     CLOSET,
-    [6],
+    ['switch-camera'],
   ),
   mission(
     'wireless',
@@ -81,15 +87,15 @@ export const missions = [
     'Wireless coverage',
     'Visitors need Wi-Fi. Mount the access point and uplink it to the PoE switch.',
     CLOSET,
-    [3],
+    ['switch-ap'],
   ),
   mission(
     'laptop',
     'Installs',
     'Laptop onboarding',
     "The access point is live. Join the manager's laptop to the office Wi-Fi.",
-    [...CLOSET, 3],
-    [8],
+    [...CLOSET, 'switch-ap'],
+    ['ap-laptop'],
   ),
   mission(
     'poe',
@@ -97,7 +103,7 @@ export const missions = [
     'PoE rollout',
     'Bring up every PoE device at once: access point, VoIP phone, and IP camera.',
     CLOSET,
-    [3, 5, 6],
+    ['switch-ap', 'switch-phone', 'switch-camera'],
   ),
   mission(
     'closet',
@@ -112,8 +118,8 @@ export const missions = [
     'Builds',
     'Wired desks',
     'Wireless and PoE are done. Finish the wired desks: desktop and printer, with UPS power.',
-    [...CLOSET, 3, 5, 6, 8],
-    [4, 7, 12, 13],
+    [...CLOSET, 'switch-ap', 'switch-phone', 'switch-camera', 'ap-laptop'],
+    ['switch-pc', 'switch-printer', 'ups-pc', 'ups-printer'],
   ),
   mission(
     'endpoints',
@@ -121,15 +127,34 @@ export const missions = [
     'Furnish the office',
     'The closet is ready. Connect every endpoint in the office and get it online.',
     CLOSET,
-    [3, 4, 5, 6, 7, 8, 12, 13],
+    [
+      'switch-ap',
+      'switch-pc',
+      'switch-phone',
+      'switch-camera',
+      'switch-printer',
+      'ap-laptop',
+      'ups-pc',
+      'ups-printer',
+    ],
   ),
   mission(
     'power',
     'Builds',
     'Backup power drill',
     'All the data cables are in, but nothing is on the UPS. Power every mains device.',
-    [0, 1, 2, 3, 4, 5, 6, 7, 8],
-    [9, 10, 11, 12, 13],
+    [
+      'isp-modem',
+      'modem-router',
+      'router-switch',
+      'switch-ap',
+      'switch-pc',
+      'switch-phone',
+      'switch-camera',
+      'switch-printer',
+      'ap-laptop',
+    ],
+    ['ups-modem', 'ups-router', 'ups-switch', 'ups-pc', 'ups-printer'],
   ),
   mission(
     'office',
@@ -144,56 +169,56 @@ export const missions = [
     'Outages',
     'Half the office went dark',
     'After the cleaners came through, most of the office dropped offline. Find what was unplugged.',
-    except(11),
-    [11],
+    except('ups-switch'),
+    ['ups-switch'],
   ),
   mission(
     'morning',
     'Outages',
     'Monday morning outage',
     'Nobody can reach the internet, yet the modem has signal. Work inward and find the missing link.',
-    except(10),
-    [10],
+    except('ups-router'),
+    ['ups-router'],
   ),
   mission(
     'print-down',
     'Outages',
     'Printer offline',
     "The printer shows offline on everyone's screen. Get it back.",
-    except(13),
-    [13],
+    except('ups-printer'),
+    ['ups-printer'],
   ),
   mission(
     'no-wifi',
     'Outages',
     'No Wi-Fi anywhere',
     "The laptop can't see the office network. Restore wireless.",
-    except(3, 8),
-    [3, 8],
+    except('switch-ap', 'ap-laptop'),
+    ['switch-ap', 'ap-laptop'],
   ),
   mission(
     'isp-down',
     'Outages',
     'Internet is down',
     'After a power cut nothing reaches the internet. Restore the uplink from the ISP inward.',
-    except(0, 9),
-    [0, 9],
+    except('isp-modem', 'ups-modem'),
+    ['isp-modem', 'ups-modem'],
   ),
   mission(
     'chaos',
     'Outages',
     'Cleaning crew chaos',
     'Several cables were knocked out overnight. Find and reconnect all of them.',
-    except(2, 6, 12),
-    [2, 6, 12],
+    except('router-switch', 'switch-camera', 'ups-pc'),
+    ['router-switch', 'switch-camera', 'ups-pc'],
   ),
   mission(
     'wrong-side',
     'Troubleshooting',
     'Wrong side of the router',
     'Nobody has internet. The modem seems to be plugged into the wrong router port.',
-    except(1),
-    [1],
+    except('modem-router'),
+    ['modem-router'],
     [
       fault(
         'modem',
@@ -210,8 +235,8 @@ export const missions = [
     'Troubleshooting',
     'Backwards uplink',
     'A contractor rewired the router and now the office is offline. Fix the WAN and LAN cabling.',
-    except(1, 2),
-    [1, 2],
+    except('modem-router', 'router-switch'),
+    ['modem-router', 'router-switch'],
     [
       fault(
         'switch',
@@ -228,8 +253,8 @@ export const missions = [
     'Troubleshooting',
     'The camera is dark',
     'The new camera never powers on. Check what it is plugged into.',
-    except(6),
-    [6],
+    except('switch-camera'),
+    ['switch-camera'],
     [
       fault(
         'camera',
@@ -246,8 +271,8 @@ export const missions = [
     'Troubleshooting',
     'Phone cord mix-up',
     'The VoIP phone has no dial tone. Someone used the wrong kind of cable.',
-    except(5),
-    [5],
+    except('switch-phone'),
+    ['switch-phone'],
     [
       fault(
         'switch',
@@ -264,8 +289,8 @@ export const missions = [
     'Troubleshooting',
     'Desktop bypassing the firewall',
     'Security flagged the desktop talking straight to the internet. Move it behind the router.',
-    except(4),
-    [4],
+    except('switch-pc'),
+    ['switch-pc'],
     [
       fault(
         'pc',
@@ -282,8 +307,8 @@ export const missions = [
     'Troubleshooting',
     'Access point in the wrong place',
     "The access point lights never come on, so the laptop can't connect.",
-    except(3),
-    [3],
+    except('switch-ap'),
+    ['switch-ap'],
     [
       fault(
         'ap',
@@ -300,8 +325,8 @@ export const missions = [
     'Troubleshooting',
     'Printer cable swap',
     'The printer has power but no network. Inspect its cable.',
-    except(7),
-    [7],
+    except('switch-printer'),
+    ['switch-printer'],
     [
       fault(
         'printer',
@@ -318,8 +343,8 @@ export const missions = [
     'Troubleshooting',
     'Double trouble',
     'Two tickets came in at once: no internet, and the camera is dark. Fix both.',
-    except(1, 6),
-    [1, 6],
+    except('modem-router', 'switch-camera'),
+    ['modem-router', 'switch-camera'],
     [
       fault(
         'modem',
@@ -337,8 +362,17 @@ export const missions = [
     'Troubleshooting',
     'Final exam: the messy office',
     'You inherited a badly wired office. Remove every bad cable and rebuild it properly.',
-    [0, 8, 9, 10, 12, 13],
-    [1, 2, 3, 4, 5, 6, 7, 11],
+    ['isp-modem', 'ap-laptop', 'ups-modem', 'ups-router', 'ups-pc', 'ups-printer'],
+    [
+      'modem-router',
+      'router-switch',
+      'switch-ap',
+      'switch-pc',
+      'switch-phone',
+      'switch-camera',
+      'switch-printer',
+      'ups-switch',
+    ],
     [
       fault(
         'modem',

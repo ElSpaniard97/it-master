@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { devices, required, cables } from '../src/engine.js';
+import { devices, required, cables, joins } from '../src/engine.js';
 import { missions, tracks } from '../src/missions.js';
 import { newState, attempt, hint, complete, undo, goal, targets, tasks } from '../src/game.js';
 const port = (d, p) => devices.find(x => x.id === d)?.ports.includes(p);
@@ -17,13 +17,12 @@ test('mission data is well formed', () => {
     for (const f of m.faults) {
       assert.ok(port(f.a, f.ap) && port(f.b, f.bp), `${m.id} fault port`);
       assert.ok(cables.some(c => c.id === f.cable));
+      const ends = [
+        { device: f.a, port: f.ap },
+        { device: f.b, port: f.bp },
+      ];
       assert.ok(
-        !required.some(
-          r =>
-            r.cable === f.cable &&
-            ((r.a === f.a && r.ap === f.ap && r.b === f.b && r.bp === f.bp) ||
-              (r.b === f.a && r.bp === f.ap && r.a === f.b && r.ap === f.bp)),
-        ),
+        !required.some(r => r.cable === f.cable && joins(r, ...ends)),
         `${m.id} fault is a correct link`,
       );
     }

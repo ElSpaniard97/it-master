@@ -1,15 +1,19 @@
-import { cables, devices, required, match, online, diagnose } from './engine.js';
+import {
+  required,
+  match,
+  online,
+  diagnose,
+  joins,
+  plugsInto,
+  portLabel,
+  deviceById,
+  cableById,
+} from './engine.js';
 import { missions } from './missions.js';
 // Ports that represent several sockets, so one cable there never blocks another.
 const shared = ['switch:eth', 'ups:power'];
-const same = (r, a, b) =>
-  (r.a === a.device && r.ap === a.port && r.b === b.device && r.bp === b.port) ||
-  (r.b === a.device && r.bp === a.port && r.a === b.device && r.ap === b.port);
-const uses = (r, e) =>
-  (r.a === e.device && r.ap === e.port) || (r.b === e.device && r.bp === e.port);
-const name = id => devices.find(d => d.id === id).name;
-const label = p => (p === 'power' ? 'PWR' : p.toUpperCase());
-export const cableName = id => cables.find(c => c.id === id).name;
+const end = (device, port) => `${deviceById(device).name} (${portLabel(port)})`;
+export const cableName = id => cableById(id).name;
 export const goal = m => [...new Set([...m.start, ...m.add])];
 // Devices the mission is about: everything a finished mission brings online, minus the always-on sources.
 export const targets = m => [...online(goal(m))].filter(id => id !== 'isp' && id !== 'ups');
@@ -40,13 +44,13 @@ export function complete(s) {
 export function attempt(s, a, b, cable) {
   const m = missionOf(s);
   if (cable === 'unplug') {
-    const f = s.faults.find(i => same(m.faults[i], a, b));
+    const f = s.faults.find(i => joins(m.faults[i], a, b));
     if (f !== undefined) {
       s.faults = s.faults.filter(i => i !== f);
       s.history.push({ unplug: f });
       return { ok: true, text: `Faulty cable removed. ${m.faults[f].why}`, fresh: [] };
     }
-    const i = s.connected.find(i => same(required[i], a, b));
+    const i = s.connected.find(i => joins(required[i], a, b));
     if (i !== undefined) {
       s.connected = s.connected.filter(x => x !== i);
       s.history.push({ removed: i });
@@ -65,7 +69,7 @@ export function attempt(s, a, b, cable) {
   }
   if (s.connected.includes(i)) return { ok: false, text: 'That link is already connected.' };
   const blocker = faultLinks(s).find(f =>
-    [a, b].some(e => !shared.includes(`${e.device}:${e.port}`) && uses(f, e)),
+    [a, b].some(e => !shared.includes(`${e.device}:${e.port}`) && plugsInto(f, e)),
   );
   if (blocker)
     return {
@@ -100,7 +104,7 @@ export function hint(s) {
       cable: 'unplug',
       a: { device: f.a, port: f.ap },
       b: { device: f.b, port: f.bp },
-      text: `Hint: the ${cableName(f.cable)} cable from ${name(f.a)} (${label(f.ap)}) to ${name(f.b)} (${label(f.bp)}) is wrong. Select Unplug and click both ends.`,
+      text: `Hint: the ${cableName(f.cable)} cable from ${end(f.a, f.ap)} to ${end(f.b, f.bp)} is wrong. Select Unplug and click both ends.`,
     };
   }
   const i = goal(m).find(i => !s.connected.includes(i));
@@ -110,7 +114,7 @@ export function hint(s) {
     cable: r.cable,
     a: { device: r.a, port: r.ap },
     b: { device: r.b, port: r.bp },
-    text: `Hint: use ${cableName(r.cable)} from ${name(r.a)} (${label(r.ap)}) to ${name(r.b)} (${label(r.bp)}).`,
+    text: `Hint: use ${cableName(r.cable)} from ${end(r.a, r.ap)} to ${end(r.b, r.bp)}.`,
   };
 }
 export function restore(saved) {
@@ -124,4 +128,11 @@ export function restore(saved) {
   s.mistakes = Number(saved.mistakes) || 0;
   s.hints = Number(saved.hints) || 0;
   return s;
+}
+// Keep the better of a mission's previous best and this finished attempt (fewer mistakes + hints).
+export function recordBest(best, s) {
+  const prev = best[s.mission],
+    score = { mistakes: s.mistakes, hints: s.hints };
+  if (!prev || score.mistakes + score.hints < prev.mistakes + prev.hints) best[s.mission] = score;
+  return best;
 }

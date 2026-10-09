@@ -27,15 +27,31 @@ This is a simplified simulation: the ISP handoff and UPS start operational; the 
 
 ## Structure
 
-- `src/engine.js`: devices, connection rules, and online reachability
-- `src/missions.js`: the 30 missions (prewired links, links to add, faulty cables)
-- `src/game.js`: mission state: connect, unplug, undo, hints, completion
-- `src/app.js`: game interactions, saved progress, and SVG cables
+Game rules are plain modules with no DOM access, so they run under `node --test`. The UI layer under `src/ui/` only renders state and reports clicks back to `src/app.js`.
+
+- `src/engine.js`: cables, devices (with scene positions), the office's correct links, and online reachability
+- `src/missions.js`: the 30 missions, written with link ids such as `'switch-pc'` or `'ups-router'`
+- `src/game.js`: mission state: connect, unplug, undo, hints, completion, best scores
+- `src/app.js`: entry point that holds state and wires DOM events to the game rules
+- `src/ui/scene.js`: device cards, port buttons and SVG cables over the office artwork
+- `src/ui/hud.js`: mission panel, progress and the cable tray
+- `src/ui/dialogs.js`: mission complete and mission list dialogs
+- `src/ui/storage.js`: saved progress in local storage
+- `src/ui/art.js`: cable and tool illustrations
 - `style.css`: office scene, floating HUD, and cable tray
 - `public/office.png`: generated office artwork
 - `docs/artwork.md`: artwork generation prompt and provenance
-- `tests/engine.test.js`: connection and power dependency tests
-- `tests/missions.test.js`: mission data checks and a hint-driven solve of every mission
+- `tests/`: unit tests for connection rules, mission data, and a hint-driven solve of every mission
+- `e2e/`: Playwright tests that play missions in a real browser
+
+## Development
+
+```sh
+npm install        # dev tools only: Prettier and Playwright
+npm test           # unit tests, no install needed
+npm run test:e2e   # browser tests (run `npx playwright install chromium` once)
+npm run format     # format with Prettier
+```
 
 ## Next levels
 
