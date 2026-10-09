@@ -8,13 +8,18 @@
   </head>
   <body>
     <main class="game">
-      <section id="scene" aria-label="Interactive office network">
-        <img
-          class="office-art"
-          src="public/office.png"
-          alt="Office with network rack, desks, computers and network equipment"
-        /><svg id="wires" aria-hidden="true"></svg>
-        <div id="devices"></div>
+      <div class="stage">
+        <div class="scene-scroll">
+          <section id="scene" aria-label="Interactive office network">
+            <img
+              class="office-art"
+              src="public/office.png"
+              alt="Office with network rack, desks, computers and network equipment"
+            /><svg id="wires" aria-hidden="true"></svg>
+            <div id="devices"></div>
+            <div class="patch-label">Patch Panel <small>Rack infrastructure</small></div>
+          </section>
+        </div>
         <section class="mission panel">
           <small id="mission-num">Mission 1</small>
           <h1 id="mission-title">Light up the fiber</h1>
@@ -22,7 +27,7 @@
           <ul class="objectives" id="objectives"></ul>
         </section>
         <section class="progress panel">
-          <h2>Progress</h2>
+          <h2>Progress <span id="best-stars" class="stars" title="Best score"></span></h2>
           <progress id="progress" max="1" value="0"></progress>
           <div id="online"></div>
           <small id="count"></small>
@@ -30,10 +35,10 @@
         <div class="scene-controls panel">
           <button id="missions">Missions ☰</button><button id="hint">Hint</button
           ><button id="undo">Undo</button><button id="reset">Restart ↻</button
-          ><button id="ports" aria-pressed="true">Ports: on</button>
+          ><button id="ports" aria-pressed="true">Ports: on</button
+          ><button id="sound" aria-pressed="true">Sound: on</button>
         </div>
-        <div class="patch-label">Patch Panel <small>Rack infrastructure</small></div>
-      </section>
+      </div>
       <section class="tool-dock panel">
         <section class="inventory">
           <h2>Cables & Tools <small>Choose a cable, then click two ports</small></h2>
@@ -62,7 +67,9 @@
       <h2>Mission Complete</h2>
       <h1 id="complete-title">Office online.</h1>
       <p>Every task is done and the mission devices are online.</p>
+      <p id="complete-stars" class="stars big"></p>
       <p id="result"></p>
+      <p id="unlocked" class="unlocked" hidden></p>
       <div class="dialog-actions">
         <button id="next">Next mission →</button
         ><button id="all-missions" class="secondary">All missions</button
@@ -70,10 +77,10 @@
       </div>
     </dialog>
     <dialog id="mission-list" class="missions-dialog">
-      <h2>Missions</h2>
+      <h2>Missions <span id="total-stars" class="stars"></span></h2>
       <p>
-        Installs and builds teach the topology. Outages and troubleshooting make you find what is
-        wrong. ★ means no mistakes or hints.
+        Finish every mission in a chapter to unlock the next. ★★★ means no mistakes or hints, ★★
+        means two slips at most.
       </p>
       <div id="mission-groups"></div>
       <button id="close-missions" class="secondary">Close</button>

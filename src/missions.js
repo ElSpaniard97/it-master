@@ -2,7 +2,14 @@ import { required, linkIndex } from './engine.js';
 // Missions name the office's required links by id (see engine.js), e.g. 'switch-pc' or 'ups-router'.
 // `start` links are already plugged in, `add` links are the player's job, and `faults` are
 // wrong cables already in the scene that must be unplugged.
-const ALL = required.map(r => r.id);
+const isPatch = r => r.a === 'patch' || r.b === 'patch';
+// The direct-wired office (chapters 1-4) and its structured-cabling version (chapter 5).
+const ALL = required.filter(r => !isPatch(r)).map(r => r.id);
+const RUNS = ['patch-camera', 'patch-pc', 'patch-ap', 'patch-printer', 'patch-phone'];
+const CORDS = ['switch-j1', 'switch-j2', 'switch-j3', 'switch-j4', 'switch-j5'];
+// Everything a fully patched office needs: the closet, wall runs, patch cords, power and Wi-Fi.
+const PATCHED = ALL.filter(id => !id.startsWith('switch-')).concat(RUNS, CORDS);
+const patchedExcept = (...skip) => PATCHED.filter(id => !skip.includes(id));
 const CLOSET = [
   'isp-modem',
   'modem-router',
@@ -23,7 +30,7 @@ const mission = (id, track, title, brief, start, add, faults = []) => ({
   add: add.map(linkIndex),
   faults,
 });
-export const tracks = ['Installs', 'Builds', 'Outages', 'Troubleshooting'];
+export const tracks = ['Installs', 'Builds', 'Outages', 'Troubleshooting', 'Patch panel'];
 export const missions = [
   mission(
     'fiber',
@@ -399,5 +406,81 @@ export const missions = [
         'The desktop must sit behind the router, not on the modem.',
       ),
     ],
+  ),
+  mission(
+    'first-jack',
+    'Patch panel',
+    'Patch the first jack',
+    'This office uses structured cabling: every desk is cabled through the walls to a jack on the patch panel. Find the desktop PC’s jack and patch it to the switch.',
+    patchedExcept(...CORDS, 'ap-laptop', 'ups-printer'),
+    ['switch-j2'],
+  ),
+  mission(
+    'patch-poe',
+    'Patch panel',
+    'Patch the PoE devices',
+    'The camera, access point and phone are cabled to the panel but not patched. Patch their jacks to the PoE switch.',
+    patchedExcept('switch-j1', 'switch-j3', 'switch-j4', 'switch-j5', 'ap-laptop', 'ups-printer'),
+    ['switch-j1', 'switch-j3', 'switch-j5'],
+  ),
+  mission(
+    'patch-floor',
+    'Patch panel',
+    'Patch the whole floor',
+    'Move-in day. Patch every desk jack, power the printer, and get the laptop on Wi-Fi.',
+    patchedExcept(...CORDS, 'ap-laptop', 'ups-printer'),
+    [...CORDS, 'ap-laptop', 'ups-printer'],
+  ),
+  mission(
+    'dead-jack',
+    'Patch panel',
+    'Dead jack',
+    'The printer is offline, but someone swears they patched it. Check the panel labels.',
+    patchedExcept('switch-j4'),
+    ['switch-j4'],
+    [
+      fault(
+        'switch',
+        'eth',
+        'patch',
+        'j6',
+        'ethernet',
+        'J6 is a spare with nothing behind it. The printer is on J4.',
+      ),
+    ],
+  ),
+  mission(
+    'rack-cord',
+    'Patch panel',
+    'Wrong cord in the rack',
+    'The IP camera dropped off the network after a rack cleanup. Look closely at its patch cord.',
+    patchedExcept('switch-j1'),
+    ['switch-j1'],
+    [
+      fault(
+        'switch',
+        'eth',
+        'patch',
+        'j1',
+        'phone',
+        'An RJ11 phone cord does not carry Ethernet or PoE. Patch J1 with Ethernet.',
+      ),
+    ],
+  ),
+  mission(
+    'new-drop',
+    'Patch panel',
+    'Terminate a new drop',
+    'The access point moved, and its new cable run is not terminated yet. Connect the AP to its jack (J3), then patch J3 to the switch.',
+    patchedExcept('patch-ap', 'switch-j3'),
+    ['patch-ap', 'switch-j3'],
+  ),
+  mission(
+    'structured',
+    'Patch panel',
+    'Structured cabling from scratch',
+    'An empty office. Build the closet, run every desk to its labeled jack, patch the jacks, and power everything. Click Patch panel to read the jack labels.',
+    [],
+    PATCHED,
   ),
 ];
