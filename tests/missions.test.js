@@ -4,9 +4,9 @@ import { devices, required, cables, joins } from '../src/engine.js';
 import { missions, tracks } from '../src/missions.js';
 import { newState, attempt, hint, complete, undo, goal, targets, tasks } from '../src/game.js';
 const port = (d, p) => devices.find(x => x.id === d)?.ports.includes(p);
-test('there are 30 missions with unique ids in known tracks', () => {
-  assert.equal(missions.length, 30);
-  assert.equal(new Set(missions.map(m => m.id)).size, 30);
+test('there are 37 missions with unique ids in known tracks', () => {
+  assert.equal(missions.length, 37);
+  assert.equal(new Set(missions.map(m => m.id)).size, 37);
   for (const m of missions) assert.ok(tracks.includes(m.track), m.id);
 });
 test('mission data is well formed', () => {

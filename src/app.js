@@ -11,12 +11,15 @@ import {
   faultLinks,
   missionOf,
   recordBest,
+  usesPatch,
 } from './game.js';
+import { chapters, chapterUnlocked, nextMission } from './progress.js';
 import { $, message, inspect } from './ui/dom.js';
 import { loadProgress, saveProgress } from './ui/storage.js';
 import { renderDevices, drawWires } from './ui/scene.js';
 import { renderMission, renderCables, showSelected } from './ui/hud.js';
 import { showComplete, showMissionList } from './ui/dialogs.js';
+import { play, soundOn, setSound } from './ui/sound.js';
 
 const saved = loadProgress();
 let state = saved.state || newState(missions[0]),
@@ -37,8 +40,8 @@ function render(fresh = []) {
       .filter(([k]) => ['key', 'inspect', 'cable'].includes(k))
       .map(([k, v]) => `[data-${k}="${v}"]`)[0];
   const live = online(state.connected);
-  renderMission(state, live);
-  renderDevices({ live, fresh, links: links(), start });
+  renderMission(state, live, best);
+  renderDevices({ live, fresh, links: links(), start, patch: usesPatch(missionOf(state)) });
   renderCables(selected);
   if (refocus) $(refocus)?.focus();
   save();
@@ -53,14 +56,18 @@ function load(m) {
 }
 
 function finish() {
+  const locked = chapters.filter(c => !chapterUnlocked(c, best));
   recordBest(best, state);
   save();
-  showComplete(missionOf(state), state);
+  const unlocked = locked.find(c => chapterUnlocked(c, best));
+  play('complete');
+  showComplete(missionOf(state), state, best, unlocked);
 }
 
 function clickPort(end) {
   if (!start) {
     start = end;
+    play('select');
     message(
       selected === 'unplug'
         ? 'First end selected. Click the other end of the cable to unplug it.'
@@ -78,6 +85,7 @@ function clickPort(end) {
     message(r.text, !r.ok);
     render(r.fresh || []);
     if (r.ok && complete(state)) finish();
+    else play(!r.ok ? 'error' : r.fresh?.length ? 'online' : 'connect');
   }
 }
 
@@ -144,6 +152,15 @@ $('#ports').onclick = () => {
   $('#ports').textContent = hide ? 'Ports: hover' : 'Ports: on';
   $('#ports').setAttribute('aria-pressed', String(!hide));
 };
+const showSound = () => {
+  $('#sound').textContent = soundOn() ? 'Sound: on' : 'Sound: off';
+  $('#sound').setAttribute('aria-pressed', String(soundOn()));
+};
+$('#sound').onclick = () => {
+  setSound(!soundOn());
+  showSound();
+  play('select');
+};
 $('#missions').onclick = () => showMissionList(state.mission, best);
 $('#all-missions').onclick = () => {
   $('#complete').close();
@@ -158,7 +175,8 @@ $('#mission-groups').addEventListener('click', e => {
 $('#close-missions').onclick = () => $('#mission-list').close();
 $('#next').onclick = () => {
   $('#complete').close();
-  load(missions[missions.indexOf(missionOf(state)) + 1]);
+  const next = nextMission(missionOf(state), best);
+  if (next) load(next);
 };
 $('#continue').onclick = () => $('#complete').close();
 window.addEventListener('resize', () => drawWires(links()));
@@ -171,5 +189,6 @@ document.addEventListener('keydown', e => {
 });
 
 showSelected(cableById(selected));
+showSound();
 intro();
 render();
