@@ -5,8 +5,10 @@ const calm = matchMedia('(prefers-reduced-motion: reduce)');
 const isStart = (start, device, port) => start?.device === device && start?.port === port;
 
 // Device cards with their status and port buttons, placed over the office artwork.
-export function renderDevices({ live, fresh, links, start }) {
+export function renderDevices({ live, fresh, links, start, patch }) {
+  $('.patch-label').hidden = patch;
   $('#devices').innerHTML = devices
+    .filter(d => patch || d.id !== 'patch')
     .map(d => {
       const ports = d.ports
         .map(p => {
@@ -18,11 +20,16 @@ export function renderDevices({ live, fresh, links, start }) {
           return `<button class="${classes.filter(Boolean).join(' ')}" data-device="${d.id}" data-port="${p}" data-key="${d.id}:${p}" aria-label="${d.name} ${p} port" aria-pressed="${isStart(start, d.id, p)}">${portLabel(p)}</button>`;
         })
         .join('');
-      const classes = ['device', live.has(d.id) && 'online', fresh.includes(d.id) && 'just-online'];
+      const classes = [
+        'device',
+        d.passive && 'passive',
+        live.has(d.id) && 'online',
+        fresh.includes(d.id) && 'just-online',
+      ];
       return [
         `<article class="${classes.filter(Boolean).join(' ')}" style="left:${d.x}%;top:${d.y}%">`,
         `<div class="device-top"><span class="device-icon">${d.icon}</span>`,
-        `<span class="status">${live.has(d.id) ? '● ONLINE' : '○ OFFLINE'}</span></div>`,
+        `<span class="status">${d.passive ? 'PASSIVE' : live.has(d.id) ? '● ONLINE' : '○ OFFLINE'}</span></div>`,
         `<button class="device-name" data-inspect="${d.id}">${d.name}</button>`,
         `<div class="ports">${ports}</div></article>`,
       ].join('');

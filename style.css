@@ -37,6 +37,9 @@ button:disabled {
   max-width: 1920px;
   margin: auto;
 }
+.stage {
+  position: relative;
+}
 #scene {
   position: relative;
   aspect-ratio: 16/9;
@@ -450,50 +453,6 @@ dialog button {
     height: 50px;
   }
 }
-@media (max-width: 650px) {
-  #scene {
-    min-width: 780px;
-  }
-  .game {
-    overflow-x: auto;
-  }
-  .tool-dock {
-    min-width: 610px;
-    margin: 0;
-    gap: 12px;
-    padding: 12px;
-  }
-  #cables {
-    grid-template-columns: repeat(5, 1fr);
-  }
-  .cable svg {
-    height: 55px;
-  }
-  .mission {
-    width: 220px;
-  }
-  .device-name {
-    font-size: 11px;
-  }
-  .progress {
-    width: 170px;
-  }
-  .feedback {
-    min-width: 610px;
-  }
-  .inventory h2 small {
-    font-size: 9px;
-  }
-  .scene-controls {
-    bottom: 8px;
-  }
-  .port {
-    font-size: 8px;
-  }
-  .patch-label {
-    font-size: 11px;
-  }
-}
 .packet {
   filter: drop-shadow(0 0 4px #fff);
 }
@@ -590,5 +549,145 @@ dialog button.secondary {
 @media (max-width: 1000px) {
   #mission-brief {
     font-size: 10px;
+  }
+}
+
+.stars {
+  color: #ffd866;
+  letter-spacing: 1px;
+  font-weight: normal;
+}
+.stars.big {
+  font-size: 34px;
+  letter-spacing: 4px;
+  margin: 4px 0;
+}
+.unlocked {
+  color: var(--green) !important;
+  font-weight: bold;
+}
+#mission-groups h3 small {
+  display: block;
+  margin-top: 3px;
+  color: #9db1c2;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: normal;
+  font-size: 11px;
+}
+#mission-groups button em {
+  color: #ffd866;
+  letter-spacing: 1px;
+}
+#mission-groups .locked h3 {
+  color: #8fa6b7;
+}
+#mission-groups button:disabled {
+  opacity: 0.45;
+}
+.device.passive .status {
+  color: #9db1c2;
+}
+.patch-label[hidden] {
+  display: none;
+}
+
+/* Phones: panels stack around a scene that scrolls sideways on its own. */
+@media (max-width: 760px) {
+  .stage {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 0;
+  }
+  .scene-scroll {
+    order: 2;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  #scene {
+    min-width: 960px;
+  }
+  .mission,
+  .progress,
+  .scene-controls {
+    position: static;
+    width: auto;
+    margin: 0 8px;
+  }
+  .mission {
+    order: 1;
+    padding: 12px 14px;
+  }
+  .mission h1 {
+    font-size: 20px;
+  }
+  #mission-brief {
+    font-size: 13px;
+  }
+  .objectives {
+    font-size: 13px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 16px;
+  }
+  .objectives li {
+    margin: 4px 0;
+  }
+  .scene-controls {
+    order: 3;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .scene-controls button {
+    flex: 1 1 auto;
+    min-height: 40px;
+    font-size: 13px;
+  }
+  .progress {
+    order: 4;
+    padding: 10px 14px;
+  }
+  .progress progress {
+    margin: 8px 0 6px;
+  }
+  .progress div {
+    font-size: 13px;
+  }
+  .tool-dock {
+    grid-template-columns: minmax(0, 1fr);
+    margin: 0;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 12px;
+  }
+  .inventory h2 {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+  #cables {
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    grid-auto-columns: 88px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .cable svg {
+    height: 50px;
+  }
+  .port {
+    min-height: 32px;
+  }
+  .feedback {
+    position: sticky;
+    bottom: 0;
+    z-index: 7;
+    padding: 10px 14px;
+    font-size: 13px;
+    border-top: 1px solid #405866;
+  }
+  dialog {
+    padding: 22px;
   }
 }

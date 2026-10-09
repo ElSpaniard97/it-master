@@ -16,7 +16,11 @@ const end = (device, port) => `${deviceById(device).name} (${portLabel(port)})`;
 export const cableName = id => cableById(id).name;
 export const goal = m => [...new Set([...m.start, ...m.add])];
 // Devices the mission is about: everything a finished mission brings online, minus the always-on sources.
-export const targets = m => [...online(goal(m))].filter(id => id !== 'isp' && id !== 'ups');
+export const targets = m =>
+  [...online(goal(m))].filter(id => id !== 'isp' && id !== 'ups' && !deviceById(id).passive);
+// The patch panel only appears in missions that use it.
+export const usesPatch = m =>
+  [...goal(m).map(i => required[i]), ...m.faults].some(r => r.a === 'patch' || r.b === 'patch');
 export function newState(m) {
   return {
     mission: m.id,
@@ -77,7 +81,13 @@ export function attempt(s, a, b, cable) {
       text: 'A cable is already plugged into that port. Use Unplug on both of its ends first.',
     };
   if (!goal(m).includes(i))
-    return { ok: false, text: 'That is a valid link, but it is not part of this mission.' };
+    return {
+      ok: false,
+      text:
+        usesPatch(m) && required[i].a === 'switch' && required[i].b !== 'patch'
+          ? 'In this office, desks reach the switch through the patch panel. Patch their jack instead.'
+          : 'That is a valid link, but it is not part of this mission.',
+    };
   const before = online(s.connected);
   s.connected.push(i);
   s.history.push({ connected: i });

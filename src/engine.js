@@ -57,6 +57,7 @@ export const cables = [
   },
 ];
 // Scene positions (x, y) are percentages of the office artwork. `mains` devices need UPS power.
+// `passive` devices (the patch panel) pass signal jack by jack and are never online themselves.
 export const devices = [
   {
     id: 'isp',
@@ -162,6 +163,16 @@ export const devices = [
     ports: ['wifi'],
     info: 'Battery-powered. Join the office access point over Wi-Fi.',
   },
+  {
+    id: 'patch',
+    name: 'Patch panel',
+    icon: '▥',
+    x: 44,
+    y: 42,
+    passive: true,
+    ports: ['j1', 'j2', 'j3', 'j4', 'j5', 'j6'],
+    info: 'Each jack is cabled through the walls to one desk. Labels: J1 IP camera, J2 desktop PC, J3 access point, J4 printer, J5 VoIP phone, J6 spare.',
+  },
 ];
 // Helpers shared by the engine, game rules and UI.
 export const portLabel = p => (p === 'power' ? 'PWR' : p.toUpperCase());
@@ -175,7 +186,18 @@ export const joins = (r, a, b) =>
 export const plugsInto = (r, e) =>
   (r.a === e.device && r.ap === e.port) || (r.b === e.device && r.bp === e.port);
 
-const link = (a, ap, b, bp, cable, lesson) => ({ id: `${a}-${b}`, a, ap, b, bp, cable, lesson });
+const link = (a, ap, b, bp, cable, lesson, id = `${a}-${b}`) => ({
+  id,
+  a,
+  ap,
+  b,
+  bp,
+  cable,
+  lesson,
+});
+// Which desk each patch panel jack is cabled to. J6 is a spare with nothing behind it.
+export const jacks = { j1: 'camera', j2: 'pc', j3: 'ap', j4: 'printer', j5: 'phone', j6: null };
+const wired = Object.entries(jacks).filter(([, id]) => id);
 const POE = ['ap', 'phone', 'camera'];
 // Every correct link in the office. Ids are `<from>-<to>`, e.g. 'switch-pc' or 'ups-router'.
 export const required = [
@@ -198,6 +220,29 @@ export const required = [
   ...devices
     .filter(d => d.mains)
     .map(d => link('ups', 'power', d.id, 'power', 'power', 'The UPS provides backup power.')),
+  // Structured cabling. New links go at the end so saved indices stay valid.
+  // Horizontal runs ('patch-pc') go through the walls; patch cords ('switch-j2') go in the rack.
+  ...wired.map(([jack, id]) =>
+    link(
+      'patch',
+      jack,
+      id,
+      'eth',
+      'ethernet',
+      `The wall run from ${jack.toUpperCase()} reaches the desk.`,
+    ),
+  ),
+  ...wired.map(([jack]) =>
+    link(
+      'switch',
+      'eth',
+      'patch',
+      jack,
+      'ethernet',
+      `A patch cord connects ${jack.toUpperCase()} to the switch.`,
+      `switch-${jack}`,
+    ),
+  ),
 ];
 
 // Index of a link by its id. Saved games store indices, so the order of `required` must not change.
@@ -212,9 +257,11 @@ export function match(a, b, cable) {
 }
 
 // Devices reachable from the ISP over the connected links. Mains devices also need power.
+// Each jack of a passive device is its own node, so signal never crosses between jacks.
 export function online(connected) {
   const edges = required.filter((_, i) => connected.includes(i));
   const powered = id => edges.some(r => r.cable === 'power' && (r.a === id || r.b === id));
+  const node = (device, port) => (deviceById(device).passive ? `${device}:${port}` : device);
   const reachable = new Set(['isp', 'ups']);
   let changed = true;
   while (changed) {
@@ -222,10 +269,10 @@ export function online(connected) {
     for (const r of edges) {
       if (r.cable === 'power') continue;
       for (const [a, b] of [
-        [r.a, r.b],
-        [r.b, r.a],
+        [node(r.a, r.ap), node(r.b, r.bp)],
+        [node(r.b, r.bp), node(r.a, r.ap)],
       ]) {
-        const needsPower = deviceById(b).mains;
+        const needsPower = deviceById(b.split(':')[0]).mains;
         if (reachable.has(a) && (!needsPower || powered(b)) && !reachable.has(b)) {
           reachable.add(b);
           changed = true;
@@ -233,7 +280,8 @@ export function online(connected) {
       }
     }
   }
-  return reachable;
+  // A passive device shows as online when any of its jacks carries signal.
+  return new Set([...reachable].map(n => n.split(':')[0]));
 }
 
 // Explain why a connection attempt does not match any required link.
@@ -245,6 +293,14 @@ export function diagnose(a, b, cable) {
     return `${c.name} is not part of this network. ${c.description}`;
   if (required.some(r => joins(r, a, b)))
     return `Right ports, wrong cable. These two ports need a different cable than ${c.name}.`;
+  const jack = [a, b].find(e => e.device === 'patch');
+  if (jack && cable === 'ethernet') {
+    const desk = jacks[jack.port];
+    if (!desk) return `${portLabel(jack.port)} is a spare jack. No cable runs behind it.`;
+    const other = a === jack ? b : a;
+    if (other.device !== 'switch')
+      return `${portLabel(jack.port)} is labeled for the ${deviceById(desk).name}. Check the panel labels.`;
+  }
   const fits = e => required.some(r => r.cable === cable && plugsInto(r, e));
   const bad = [a, b].find(e => !fits(e));
   if (bad)
