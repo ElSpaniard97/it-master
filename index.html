@@ -1,3 +1,83 @@
 <!doctype html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>IT Master — Network Missions</title><link rel="stylesheet" href="style.css"></head>
-<body><main class="game"><section id="scene" aria-label="Interactive office network"><img class="office-art" src="public/office.png" alt="Office with network rack, desks, computers and network equipment"><svg id="wires" aria-hidden="true"></svg><div id="devices"></div><section class="mission panel"><small id="mission-num">Mission 1</small><h1 id="mission-title">Light up the fiber</h1><p id="mission-brief"></p><ul class="objectives" id="objectives"></ul></section><section class="progress panel"><h2>Progress</h2><progress id="progress" max="1" value="0"></progress><div id="online"></div><small id="count"></small></section><div class="scene-controls panel"><button id="missions">Missions ☰</button><button id="hint">Hint</button><button id="undo">Undo</button><button id="reset">Restart ↻</button><button id="ports" aria-pressed="true">Ports: on</button></div><div class="patch-label">Patch Panel <small>Rack infrastructure</small></div></section><section class="tool-dock panel"><section class="inventory"><h2>Cables & Tools <small>Choose a cable, then click two ports</small></h2><div id="cables"></div></section><section class="inspector"><h2>Selected Item</h2><div class="selected-detail"><div id="selected-art" aria-hidden="true"></div><div><h3 id="inspect-name">Ethernet (Cat6)</h3><p id="inspect-info">Carry network traffic. The PoE switch also powers the access point, phone, and camera.</p></div></div></section></section><div class="feedback" id="feedback" role="status" aria-live="polite">Choose a cable below, then click its source and destination ports. Progress saves automatically.</div></main><dialog id="complete"><h2>Mission Complete</h2><h1 id="complete-title">Office online.</h1><p>Every task is done and the mission devices are online.</p><p id="result"></p><div class="dialog-actions"><button id="next">Next mission →</button><button id="all-missions" class="secondary">All missions</button><button id="continue" class="secondary">Stay here</button></div></dialog><dialog id="mission-list" class="missions-dialog"><h2>Missions</h2><p>Installs and builds teach the topology. Outages and troubleshooting make you find what is wrong. ★ means no mistakes or hints.</p><div id="mission-groups"></div><button id="close-missions" class="secondary">Close</button></dialog><script type="module" src="src/app.js"></script></body></html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>IT Master — Network Missions</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="game">
+      <section id="scene" aria-label="Interactive office network">
+        <img
+          class="office-art"
+          src="public/office.png"
+          alt="Office with network rack, desks, computers and network equipment"
+        /><svg id="wires" aria-hidden="true"></svg>
+        <div id="devices"></div>
+        <section class="mission panel">
+          <small id="mission-num">Mission 1</small>
+          <h1 id="mission-title">Light up the fiber</h1>
+          <p id="mission-brief"></p>
+          <ul class="objectives" id="objectives"></ul>
+        </section>
+        <section class="progress panel">
+          <h2>Progress</h2>
+          <progress id="progress" max="1" value="0"></progress>
+          <div id="online"></div>
+          <small id="count"></small>
+        </section>
+        <div class="scene-controls panel">
+          <button id="missions">Missions ☰</button><button id="hint">Hint</button
+          ><button id="undo">Undo</button><button id="reset">Restart ↻</button
+          ><button id="ports" aria-pressed="true">Ports: on</button>
+        </div>
+        <div class="patch-label">Patch Panel <small>Rack infrastructure</small></div>
+      </section>
+      <section class="tool-dock panel">
+        <section class="inventory">
+          <h2>Cables & Tools <small>Choose a cable, then click two ports</small></h2>
+          <div id="cables"></div>
+        </section>
+        <section class="inspector">
+          <h2>Selected Item</h2>
+          <div class="selected-detail">
+            <div id="selected-art" aria-hidden="true"></div>
+            <div>
+              <h3 id="inspect-name">Ethernet (Cat6)</h3>
+              <p id="inspect-info">
+                Carry network traffic. The PoE switch also powers the access point, phone, and
+                camera.
+              </p>
+            </div>
+          </div>
+        </section>
+      </section>
+      <div class="feedback" id="feedback" role="status" aria-live="polite">
+        Choose a cable below, then click its source and destination ports. Progress saves
+        automatically.
+      </div>
+    </main>
+    <dialog id="complete">
+      <h2>Mission Complete</h2>
+      <h1 id="complete-title">Office online.</h1>
+      <p>Every task is done and the mission devices are online.</p>
+      <p id="result"></p>
+      <div class="dialog-actions">
+        <button id="next">Next mission →</button
+        ><button id="all-missions" class="secondary">All missions</button
+        ><button id="continue" class="secondary">Stay here</button>
+      </div>
+    </dialog>
+    <dialog id="mission-list" class="missions-dialog">
+      <h2>Missions</h2>
+      <p>
+        Installs and builds teach the topology. Outages and troubleshooting make you find what is
+        wrong. ★ means no mistakes or hints.
+      </p>
+      <div id="mission-groups"></div>
+      <button id="close-missions" class="secondary">Close</button>
+    </dialog>
+    <script type="module" src="src/app.js"></script>
+  </body>
+</html>
